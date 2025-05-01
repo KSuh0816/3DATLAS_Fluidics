@@ -21,6 +21,7 @@ class Protocol:
         self.wait_factor = 0
         self.speed_conversion = 1.5
         self.primed = False
+        self.vacuum_time = 30
 
         self.protocols['Valve'] = self.valve
         self.protocols['Clean'] = self.clean
@@ -42,7 +43,7 @@ class Protocol:
         self.protocols['add_test'] = self.add_test
         self.protocols['mix_test'] = self.mix_test
         self.protocols['replace_volume_vacuum_test'] = self.replace_volume_vacuum_test
-
+        self.protocols['vacuum_test'] = self.vacuum_test
     def update_user(self,message,level=20,logger='Protocol'):
         logger = self.device +'***' + logger
         if self.verbose:
@@ -84,12 +85,14 @@ class Protocol:
         time_estimate = ((float(volume)/float(speed))*self.speed_conversion)+1+float(pause)
         return pd.DataFrame([port,volume,speed,pause,direction,time_estimate],index = ['port','volume','speed','pause','direction','time_estimate']).T
     
-    def replace_volume_vacuum(self,chambers,port,volume,speed=0,pause=0,vacuum_time=45):
+    def replace_volume_vacuum(self,chambers,port,volume,speed=0,pause=0,vacuum_time=0):
         if speed == 0:
             speed = self.speed
+        if vacuum_time == 0:
+            vacuum_time = self.vacuum_time
         steps = []
         for chamber in chambers:
-            steps.append(self.replace_volume_single_vacuum(port,chamber,volume,speed=speed,pause=0,vacuum_time=45))
+            steps.append(self.replace_volume_single_vacuum(port,chamber,volume,speed=speed,pause=0,vacuum_time=vacuum_time))
         steps.append(self.wait(pause))
         return pd.concat(steps,ignore_index=True)
 
@@ -433,10 +436,14 @@ class Protocol:
         volume = float(volume)
         return self.mix(chambers,port,volume)
     
-    def vacuum_test(self,chambers,other):
+    def vacuum_test(self,chambers,other, pause=1):
         port,vacuum_time = other.split('+')
-        volume = float(volume)
-        return self.vacuum_chamber(chambers,pause=vacuum_time)
+        vacuum_time = float(vacuum_time)
+        steps = []
+        for chamber in chambers:
+            steps.append(self.vacuum_chamber(chamber,pause=vacuum_time))
+        steps.append(self.wait(pause))
+        return pd.concat(steps,ignore_index=True)
     
     def replace_volume_vacuum_test(self,chambers,other):
         port,volume = other.split('+')

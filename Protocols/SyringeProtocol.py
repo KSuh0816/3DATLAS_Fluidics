@@ -17,7 +17,7 @@ class SyringeProtocol(Protocol):
         steps.append(self.wait(1))
         return pd.concat(steps,ignore_index=True)
     
-    def replace_volume_single_vacuum(self,inport,outport,volume,speed=0,pause=0,vacuum_time=45):
+    def replace_volume_single_vacuum(self,inport,outport,volume,speed=0,pause=0,vacuum_time=30):
         if speed == 0:
             speed = self.speed
         steps = []
@@ -74,10 +74,10 @@ class SyringeProtocol(Protocol):
         steps.append(self.format(port=chamber,volume=volume,speed=speed,pause=pause,direction='Forward'))
         return pd.concat(steps,ignore_index=True)
     
-    def vacuum_chamber(self,chamber,speed=0,pause=45):
+    def vacuum_chamber(self,chamber,speed=0,pause=30):
         vac_chamber = 'Vacuum_'+chamber
         vac_waster = 'Vacuum_Waster'
         steps = []
-        steps.append(self.format(port=vac_chamber,volume=0,speed=self.max_speed ,pause=pause,direction='Reverse'))
-        steps.append(self.format(port=vac_waster,volume=0,speed=self.max_speed ,pause=1,direction='Forward'))
+        steps.append(self.format(port=vac_chamber,volume=0,speed=self.max_speed ,pause=pause,direction='Forward'))
+        steps.append(self.format(port=vac_waster,volume=0,speed=self.max_speed ,pause=0,direction='Reverse'))
         return pd.concat(steps,ignore_index=True)
