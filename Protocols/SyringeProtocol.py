@@ -16,6 +16,20 @@ class SyringeProtocol(Protocol):
         steps.append(self.add_liquid(inport,outport,volume,speed=speed,pause=pause))
         steps.append(self.wait(1))
         return pd.concat(steps,ignore_index=True)
+    
+    def replace_volume_single_vacuum(self,inport,outport,volume,speed=0,pause=0,vacuum_time=45):
+        if speed == 0:
+            speed = self.speed
+        steps = []
+        if outport!='Waste':
+            steps.append(self.vacuum_chamber(outport,speed=0,pause=vacuum_time))
+            steps.append(self.wait(1))
+        steps.append(self.add_liquid(inport,outport,volume,speed=speed,pause=pause))
+        steps.append(self.wait(1))
+        return pd.concat(steps,ignore_index=True)
+    
+
+
 
     def replace_volume_closed_single(self,inport,outport,volume,speed=0,pause=0,n_steps=1):
         if speed == 0:
@@ -58,4 +72,12 @@ class SyringeProtocol(Protocol):
         steps = []
         steps.append(self.format(port=port,volume=volume,speed=self.max_speed ,pause=0,direction='Reverse'))
         steps.append(self.format(port=chamber,volume=volume,speed=speed,pause=pause,direction='Forward'))
+        return pd.concat(steps,ignore_index=True)
+    
+    def vacuum_chamber(self,chamber,speed=0,pause=45):
+        vac_chamber = 'Vacuum_'+chamber
+        vac_waster = 'Vacuum_Waster'
+        steps = []
+        steps.append(self.format(port=vac_chamber,volume=0,speed=self.max_speed ,pause=pause,direction='Reverse'))
+        steps.append(self.format(port=vac_waster,volume=0,speed=self.max_speed ,pause=1,direction='Forward'))
         return pd.concat(steps,ignore_index=True)

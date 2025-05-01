@@ -23,6 +23,7 @@ class LightSheetFluidics(Fluidics):
         self.Protocol.closed_speed = 0.25
         self.Protocol.wait_factor = self.Pump.wait_factor
         self.Protocol.speed_conversion = self.Pump.speed_conversion
+        self.Protocol.vacuum_time=45
         self.Valve_Commands = {
                                 'A':{'valve':1,'port':1},
                                 'B':{'valve':1,'port':2},
@@ -63,6 +64,7 @@ class LightSheetFluidics(Fluidics):
                                 'Hybe22':{'valve':3,'port':22},
                                 'Hybe23':{'valve':3,'port':23},
                                 'Hybe24':{'valve':3,'port':24},
+                                'Valve3':{'valve':3,'port':10},
 
                                 'Vacuum_A':{'valve':4,'port':1},
                                 'Vacuum_B':{'valve':4,'port':2},

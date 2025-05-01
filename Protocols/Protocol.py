@@ -6,7 +6,6 @@ class Protocol:
         self.protocols = {}
 
         self.simulate = False
-        self.vacume = False
 
         self.chamber_volume = 5
         self.flush_volume = 1.5
@@ -40,7 +39,9 @@ class Protocol:
         self.protocols['EvensAndOdds'] = self.evens_and_odds
         self.protocols['Dendrimer'] = self.dendrimer
         self.protocols['OneDendrimer'] = self.one_dendrimer
-        
+        self.protocols['add_test'] = self.add_test
+        self.protocols['mix_test'] = self.mix_test
+        self.protocols['replace_volume_vacuum_test'] = self.replace_volume_vacuum_test
 
     def update_user(self,message,level=20,logger='Protocol'):
         logger = self.device +'***' + logger
@@ -82,6 +83,38 @@ class Protocol:
     def format(self,port='A',volume=0,speed=1,pause=0,direction='Forward'):
         time_estimate = ((float(volume)/float(speed))*self.speed_conversion)+1+float(pause)
         return pd.DataFrame([port,volume,speed,pause,direction,time_estimate],index = ['port','volume','speed','pause','direction','time_estimate']).T
+    
+    def replace_volume_vacuum(self,chambers,port,volume,speed=0,pause=0,vacuum_time=45):
+        if speed == 0:
+            speed = self.speed
+        steps = []
+        for chamber in chambers:
+            steps.append(self.replace_volume_single_vacuum(port,chamber,volume,speed=speed,pause=0,vacuum_time=45))
+        steps.append(self.wait(pause))
+        return pd.concat(steps,ignore_index=True)
+
+    def add(self,chambers,port,volume,speed=0,pause=0):
+        if speed == 0:
+            speed = self.speed
+        steps = []
+        for chamber in chambers:
+            steps.append(self.add_liquid(port,chamber,volume,speed=speed,pause=pause))
+        steps.append(self.wait(pause))
+        return pd.concat(steps,ignore_index=True)
+    
+    def mix(self,chambers,port,volume,speed=0,pause=0):
+        if speed == 0:
+            speed = self.speed
+        steps = []
+        for chamber in chambers:
+            steps.append(self.add_liquid(chamber,chamber,volume,speed=speed,pause=pause))
+        steps.append(self.wait(pause))
+        return pd.concat(steps,ignore_index=True)
+
+
+        
+
+
 
 
 
@@ -390,8 +423,22 @@ class Protocol:
         steps.append(self.Hybe2Image(chambers,other))
         return pd.concat(steps,ignore_index=True)
 
-
-
-
-
-        
+    def add_test(self,chambers,other):
+        port,volume = other.split('+')
+        volume = float(volume)
+        return self.add(chambers,port,volume)
+    
+    def mix_test(self,chambers,other):
+        port,volume = other.split('+')
+        volume = float(volume)
+        return self.mix(chambers,port,volume)
+    
+    def vacuum_test(self,chambers,other):
+        port,vacuum_time = other.split('+')
+        volume = float(volume)
+        return self.vacuum_chamber(chambers,pause=vacuum_time)
+    
+    def replace_volume_vacuum_test(self,chambers,other):
+        port,volume = other.split('+')
+        volume = float(volume)
+        return self.replace_volume_vacuum(chambers,port,volume)
